@@ -5,6 +5,9 @@
 
 #include "input.h"
 #include "keytable.h"
+#include "rgba.h"
+#include "rect.h"
+#include "point.h"
 
 SCM poll_input(SCM scm_ctx){
 	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
@@ -37,8 +40,20 @@ SCM key_pressed(SCM scm_ctx, SCM scm_key){
 	}
 }
 
-SCM mouse_pressed(SCM scm_ctx, SCM scm_mbutton){
+SCM key_down(SCM scm_ctx, SCM scm_key){
+	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	if(ctx){
+		SDL_Keycode key = (SDL_Keycode) scm_to_uint8(scm_key);
+		SDL_Scancode scan = SDL_GetScancodeFromKey(key);
+		bool current = ctx->keyboard.current ? ctx->keyboard.current[scan] : false;
+		return current ? SCM_BOOL_T : SCM_BOOL_F;
+	}
+	return SCM_BOOL_F;
+}
 
+SCM mouse_pressed(SCM scm_ctx, SCM scm_mbutton){
+	// TODO
+	return SCM_BOOL_F;
 }
 
 SCM close_requested(SCM scm_ctx){
@@ -136,6 +151,87 @@ SCM destroy_texture(SCM scm_tex){
 	return SCM_BOOL_T;
 }
 
+SCM render_clear(SCM scm_ctx, SCM scm_rgba){
+	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	struct rgba rgba;
+	if(!scm_to_rgba(scm_rgba, &rgba)){
+		// TODO error
+		return SCM_BOOL_F;
+	}
+	if(SDL_SetRenderDrawColor(ctx->renderer, rgba.r, rgba.g, rgba.b, rgba.a) != 0){
+		// TODO error
+		return SCM_BOOL_F;
+	}
+	if(SDL_RenderClear(ctx->renderer) != 0){
+		// TODO error
+		return SCM_BOOL_F;
+	}
+	return SCM_BOOL_T;
+}
+
+SCM render_present(SCM scm_ctx){
+	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	if(ctx){
+		SDL_RenderPresent(ctx->renderer);
+	}
+	return SCM_BOOL_F;
+}
+
+SCM render_texture_xy(SCM scm_ctx, SCM scm_tex, SCM scm_xy){
+	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	SDL_Texture *tex = (SDL_Texture*) scm_to_long(scm_tex);
+	if(ctx) {
+		int access;
+		uint32_t format;
+		int w, h;
+		SDL_QueryTexture(tex, &format, &access, &w, &h);
+
+		SDL_Rect src = {
+			.w = w,
+			.h = h,
+			.x = 0,
+			.y = 0,
+		};
+
+		SDL_Point point;
+		scm_to_point(scm_xy, &point);
+		SDL_Rect dst = {
+			.w = w,
+			.h = h,
+			.x = point.x,
+			.y = point.y,
+		};
+
+		SDL_RenderCopy(ctx->renderer, tex, &src, &dst);
+	}
+	return SCM_BOOL_F;
+}
+
+SCM render_texture_xywh(SCM scm_ctx, SCM scm_tex, SCM scm_xywh){
+	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	SDL_Texture *tex = (SDL_Texture*) scm_to_long(scm_tex);
+	if(ctx){
+		int access;
+		uint32_t format;
+		int w, h;
+
+		SDL_QueryTexture(tex, &format, &access, &w, &h);
+
+		SDL_Rect src = {
+			.w = w,
+			.h = h,
+			.x = 0,
+			.y = 0,
+		};
+
+		SDL_Rect dst;
+		scm_to_rect(scm_xywh, &dst);
+		
+		SDL_RenderCopy(ctx->renderer, tex, &src, &dst);
+	}
+	return SCM_BOOL_F;
+}
+
 void init_play_core(void *unused){
 #if 0
 	if(SDL_Init(SDL_INIT_EVERYTHING) != 0){
@@ -150,6 +246,12 @@ void init_play_core(void *unused){
 	scm_c_define_gsubr("destroy-play-context", 1, 0, 0, destroy_context);
 	scm_c_export("destroy-play-context", NULL);
 
+	scm_c_define_gsubr("render-clear", 2, 0, 0, render_clear);
+	scm_c_export("render-clear", NULL);
+
+	scm_c_define_gsubr("render-present", 1, 0, 0, render_present);
+	scm_c_export("render-present", NULL);
+
 	scm_c_define_gsubr("load-texture", 2, 0, 0, load_texture);
 	scm_c_export("load-texture", NULL);
 
@@ -162,11 +264,17 @@ void init_play_core(void *unused){
 	scm_c_define_gsubr("key-pressed", 2, 0, 0, key_pressed);
 	scm_c_export("key-pressed", NULL);
 
+	scm_c_define_gsubr("key-down", 2, 0, 0, key_down);
+	scm_c_export("key-down", NULL);
+
 	scm_c_define_gsubr("mouse-pressed", 2, 0, 0, mouse_pressed);
 	scm_c_export("mouse-pressed", NULL);
 
 	scm_c_define_gsubr("mouse-pos", 1, 0, 0, mouse_pos);
 	scm_c_export("mouse-pos", NULL);
+
+	scm_c_define_gsubr("render-texture-xy", 3, 0, 0,render_texture_xy);
+	scm_c_export("render-texture-xy", NULL);
 
 	scm_c_define_gsubr("close-requested", 1, 0, 0, close_requested);
 	scm_c_export("close-requested", NULL);
