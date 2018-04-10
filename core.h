@@ -3,6 +3,7 @@
 #pragma once
 
 #include <SDL.h>
+#include <libguile.h>
 #include <stdbool.h>
 
 struct play_context {
@@ -23,4 +24,6 @@ struct play_context {
 
 typedef struct play_context playctx;
 
+playctx *scm_to_playctx(SCM ctx);
+SCM scm_from_playctx(playctx *ctx);
 #endif
