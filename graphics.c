@@ -26,7 +26,7 @@ texture_handle *scm_to_tex(SCM tex){
 }
 
 SCM load_texture(SCM scm_ctx, SCM scm_path){
-	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	playctx *ctx = scm_to_playctx(scm_ctx);
 	if(!ctx){
 		// TODO error
 		return scm_from_long(0x0);
@@ -120,7 +120,7 @@ SCM render_texture_xy(SCM scm_ctx, SCM scm_tex, SCM scm_xy){
 }
 
 SCM render_texture_xywh(SCM scm_ctx, SCM scm_tex, SCM scm_xywh){
-	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	playctx *ctx = scm_to_playctx(scm_ctx);
 	SDL_Texture *tex = (SDL_Texture*) scm_to_long(scm_tex);
 	if(ctx){
 		int access;
