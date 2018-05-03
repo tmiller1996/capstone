@@ -64,6 +64,3 @@
         (set! face-x (- width face-w -1)))
     (when (> (+ face-y face-h -1) height)
         (set! face-y (- height face-h -1))))
-
-(destroy-texture face)
-(destroy-play-context ctx)
