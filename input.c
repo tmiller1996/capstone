@@ -32,3 +32,7 @@ void ctx_poll_input(playctx *ctx){
 	ctx_poll_keyboard(ctx);
 	ctx_poll_mouse(ctx);
 }
+
+void init_input(){
+	
+}
