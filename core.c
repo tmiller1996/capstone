@@ -10,6 +10,7 @@
 #include "rect.h"
 #include "point.h"
 #include "graphics.h"
+#include "sound.h"
 
 extern playctx *scm_to_playctx(SCM ctx){
 	return (playctx*) scm_to_long(ctx);
@@ -139,6 +140,7 @@ void init_play_core(void *unused){
 #endif
 	init_keytable();
 	init_graphics();
+	init_sound();
 
 	scm_c_define_gsubr("create-play-context", 3, 0, 0, create_context);
 	scm_c_export("create-play-context", NULL);
