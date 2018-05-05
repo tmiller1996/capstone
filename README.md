@@ -7,6 +7,8 @@ A game library for GNU Guile
 * GNU Guile
 * libsdl2
 * libsdl-image
+* libsdl-ttf
+* libsdl-mixer
 
 ## Compiling
 
@@ -17,7 +19,7 @@ A game library for GNU Guile
 Install the dependencies.  On Debian/Ubuntu this can be done with the following command
 
 ```sh
-sudo apt install libguile-dev libsdl2-dev libsdl-image-dev
+sudo apt install libguile-dev libsdl2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev  libsdl-ttf2.0-dev
 ```
 
 #### Compiling
