@@ -21,60 +21,6 @@ extern SCM scm_from_playctx(playctx *ctx){
 	return scm_from_long((long) ctx);
 }
 
-static SCM poll_input(SCM scm_ctx){
-	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
-	if(ctx){
-		ctx_poll_input(ctx);
-	}
-	return SCM_BOOL_T;
-}
-
-static SCM mouse_pos(SCM scm_ctx){
-	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
-	if(ctx){
-		return scm_cons(scm_from_int(ctx->mouse.x), scm_from_int(ctx->mouse.y));
-	} else {
-		// TODO error here
-		return SCM_BOOL_F;
-	}
-}
-
-static SCM key_pressed(SCM scm_ctx, SCM scm_key){
-	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
-	if(ctx){
-		SDL_Keycode key = (SDL_Keycode) scm_to_uint8(scm_key);
-		SDL_Scancode scan = SDL_GetScancodeFromKey(key);
-		bool current = ctx->keyboard.current ? ctx->keyboard.current[scan] : false;
-		bool last = ctx->keyboard.last ? ctx->keyboard.last[scan] : false;
-		return current && !last ? SCM_BOOL_T : SCM_BOOL_F;
-	} else {
-		return SCM_BOOL_F;
-	}
-}
-
-static SCM key_down(SCM scm_ctx, SCM scm_key){
-	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
-	if(ctx){
-		SDL_Keycode key = (SDL_Keycode) scm_to_uint8(scm_key);
-		SDL_Scancode scan = SDL_GetScancodeFromKey(key);
-		bool current = ctx->keyboard.current ? ctx->keyboard.current[scan] : false;
-		return current ? SCM_BOOL_T : SCM_BOOL_F;
-	}
-	return SCM_BOOL_F;
-}
-
-static SCM mouse_pressed(SCM scm_ctx, SCM scm_mbutton){
-	// TODO
-	return SCM_BOOL_F;
-}
-
-static SCM close_requested(SCM scm_ctx){
-	playctx *ctx = scm_to_playctx(scm_ctx);
-	if(ctx){
-		return ctx->close_requested ? SCM_BOOL_T : SCM_BOOL_F;
-	}
-	return SCM_BOOL_F;
-}
 
 static void playctx_finalizer(void *_ctx, void *unused){
 	playctx *ctx = (playctx*) _ctx;
@@ -95,6 +41,7 @@ static void playctx_finalizer(void *_ctx, void *unused){
 }
 
 static SCM create_context(SCM scm_title, SCM scm_width, SCM scm_height){
+	// TODO rewrite this fn
 	char *title = scm_to_locale_string(scm_title);
 	int width = scm_to_int(scm_width);
 	int height = scm_to_int(scm_height);
@@ -134,35 +81,17 @@ static SCM create_context(SCM scm_title, SCM scm_width, SCM scm_height){
 }
 
 void init_play_core(void *unused){
-#if 0
-	if(SDL_Init(SDL_INIT_EVERYTHING) != 0){
-		// TODO error
+	if(SDL_Init(0) != 0){
+		fprintf(stderr, "SDL_Init failed with error: %s\n", SDL_GetError());
+		return;
 	}
-#endif
+
+	scm_c_define_gsubr("create-play-context", 3, 0, 0, create_context);
+	scm_c_export("create-play-context", NULL);
+
 	init_keytable();
 	init_input();
 	init_graphics();
 	init_sound();
 	init_ttf();
-
-	scm_c_define_gsubr("create-play-context", 3, 0, 0, create_context);
-	scm_c_export("create-play-context", NULL);
-
-	scm_c_define_gsubr("poll-input", 1, 0, 0, poll_input);
-	scm_c_export("poll-input", NULL);
-
-	scm_c_define_gsubr("key-pressed", 2, 0, 0, key_pressed);
-	scm_c_export("key-pressed", NULL);
-
-	scm_c_define_gsubr("key-down", 2, 0, 0, key_down);
-	scm_c_export("key-down", NULL);
-
-	scm_c_define_gsubr("mouse-pressed", 2, 0, 0, mouse_pressed);
-	scm_c_export("mouse-pressed", NULL);
-
-	scm_c_define_gsubr("mouse-pos", 1, 0, 0, mouse_pos);
-	scm_c_export("mouse-pos", NULL);
-
-	scm_c_define_gsubr("close-requested", 1, 0, 0, close_requested);
-	scm_c_export("close-requested", NULL);
 }

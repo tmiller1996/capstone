@@ -21,7 +21,7 @@ static void ctx_poll_keyboard(playctx *ctx){
 	}
 }
 
-void ctx_poll_input(playctx *ctx){
+static void ctx_poll_input(playctx *ctx){
 	SDL_Event event;
 	SDL_PumpEvents();
 	while(SDL_PollEvent(&event)){
@@ -33,6 +33,77 @@ void ctx_poll_input(playctx *ctx){
 	ctx_poll_mouse(ctx);
 }
 
+static SCM poll_input(SCM scm_ctx){
+	playctx *ctx = scm_to_playctx(scm_ctx);
+	if(ctx){
+		ctx_poll_input(ctx);
+	}
+	return SCM_BOOL_T;
+}
+
+static SCM mouse_pos(SCM scm_ctx){
+	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	if(ctx){
+		return scm_cons(scm_from_int(ctx->mouse.x), scm_from_int(ctx->mouse.y));
+	} else {
+		// TODO error here
+		return SCM_BOOL_F;
+	}
+}
+
+static SCM key_pressed(SCM scm_ctx, SCM scm_key){
+	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	if(ctx){
+		SDL_Keycode key = (SDL_Keycode) scm_to_uint8(scm_key);
+		SDL_Scancode scan = SDL_GetScancodeFromKey(key);
+		bool current = ctx->keyboard.current ? ctx->keyboard.current[scan] : false;
+		bool last = ctx->keyboard.last ? ctx->keyboard.last[scan] : false;
+		return current && !last ? SCM_BOOL_T : SCM_BOOL_F;
+	} else {
+		return SCM_BOOL_F;
+	}
+}
+
+static SCM key_down(SCM scm_ctx, SCM scm_key){
+	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	if(ctx){
+		SDL_Keycode key = (SDL_Keycode) scm_to_uint8(scm_key);
+		SDL_Scancode scan = SDL_GetScancodeFromKey(key);
+		bool current = ctx->keyboard.current ? ctx->keyboard.current[scan] : false;
+		return current ? SCM_BOOL_T : SCM_BOOL_F;
+	}
+	return SCM_BOOL_F;
+}
+
+static SCM mouse_pressed(SCM scm_ctx, SCM scm_mbutton){
+	// TODO
+	return SCM_BOOL_F;
+}
+
+static SCM close_requested(SCM scm_ctx){
+	playctx *ctx = scm_to_playctx(scm_ctx);
+	if(ctx){
+		return ctx->close_requested ? SCM_BOOL_T : SCM_BOOL_F;
+	}
+	return SCM_BOOL_F;
+}
+
 void init_input(){
-	
+	scm_c_define_gsubr("poll-input", 1, 0, 0, poll_input);
+	scm_c_export("poll-input", NULL);
+
+	scm_c_define_gsubr("key-pressed", 2, 0, 0, key_pressed);
+	scm_c_export("key-pressed", NULL);
+
+	scm_c_define_gsubr("key-down", 2, 0, 0, key_down);
+	scm_c_export("key-down", NULL);
+
+	scm_c_define_gsubr("mouse-pressed", 2, 0, 0, mouse_pressed);
+	scm_c_export("mouse-pressed", NULL);
+
+	scm_c_define_gsubr("mouse-pos", 1, 0, 0, mouse_pos);
+	scm_c_export("mouse-pos", NULL);
+
+	scm_c_define_gsubr("close-requested", 1, 0, 0, close_requested);
+	scm_c_export("close-requested", NULL);
 }
