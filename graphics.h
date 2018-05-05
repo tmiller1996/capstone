@@ -2,5 +2,5 @@
 #define GRAPHICS_H
 #pragma once
 
-void init_graphics();
+extern void init_graphics();
 #endif
