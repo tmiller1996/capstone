@@ -7,9 +7,9 @@
 (define width 800)
 (define height 600)
 
-(define ctx (create-play-context "Hello Game" width height))
+(define ctx (create-play-context "Example Game" width height))
 
-(define face (load-texture ctx "face.bmp"))
+(define face (load-texture ctx "assets/face.bmp"))
 
 (define red '(255 0 0 255))
 (define green '(0 255 0 255))
