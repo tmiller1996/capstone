@@ -12,7 +12,6 @@
 #include "sound.h"
 #include "ttf.h"
 #include "error.h"
-#include "ticks.h"
 
 playctx *scm_to_playctx(SCM ctx){
 	return (playctx*) scm_to_long(ctx);
@@ -105,6 +104,15 @@ static SCM create_context(SCM scm_title, SCM scm_width, SCM scm_height){
 }
 #undef __SCM_FUNCTION__
 
+static SCM get_ticks(){
+	return scm_from_uint32(SDL_GetTicks());
+}
+
+static SCM delay_ticks(SCM ticks){
+	SDL_Delay(scm_to_uint32(ticks));
+	return SCM_BOOL_T;
+}
+
 void init_play_core(void *unused){
 	if(SDL_Init(0) != 0){
 		fprintf(stderr, "SDL_Init failed with error: %s\n", SDL_GetError());
@@ -117,10 +125,15 @@ void init_play_core(void *unused){
 	scm_c_define_gsubr("destroy-context", 1, 0, 0, destroy_context);
 	scm_c_export("destroy-context", NULL);
 
+	scm_c_define_gsubr("get-ticks", 0, 0, 0, get_ticks);
+	scm_c_export("get-ticks");
+
+	scm_c_define_gsubr("delay-ticks", 1, 0, 0, delay_ticks);
+	scm_c_export("delay-ticks");
+
 	init_keytable();
 	init_input();
 	init_graphics();
 	init_sound();
 	init_ttf();
-	init_ticks();
 }

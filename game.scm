@@ -67,11 +67,11 @@
     (input-game)))
 
 (define (gravity)
-  (set! player-vy (+ player-vy 1)))
+  (when (< player-vy 10)
+    (set! player-vy (+ player-vy 10))))
 
 (define (jump)
-  ; (write "jump") (newline)
-  (set! player-vy (+ player-vy -90)))
+  (set! player-vy (+ player-vy -60)))
 
 (define (player-update)
   (gravity)
@@ -87,9 +87,9 @@
     (set! player-y (- height player-h 1))))
 
 (while running
-  ; (write player-x) (write ", ") (write player-y) (newline)
   (poll-input ctx)
   (render)
-  (input))
+  (input)
+  (delay-ticks 5))
 
 (destroy-context ctx)
