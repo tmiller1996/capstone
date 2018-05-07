@@ -70,8 +70,8 @@
   (set! player-vy (+ player-vy 1)))
 
 (define (jump)
-  (when (not jumping)
-    (set! jumping (get-ticks))))
+  ; (write "jump") (newline)
+  (set! player-vy (+ player-vy -90)))
 
 (define (player-update)
   (gravity)
