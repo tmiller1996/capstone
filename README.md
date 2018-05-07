@@ -30,8 +30,7 @@ Run `make` in the directory.  This will compile the native extension.
 #### Test compilation by running the example application
 
 ```
-chmod +x game.scm
-./game.scm
+guile game.scm
 ```
 
 ### Windows
