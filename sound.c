@@ -86,6 +86,26 @@ SCM load_chunk(SCM scm_path) {
 	}
 }
 
-void init_sound() {
+SCM play_sound(SCM scm_chunk) {
+	
+}
 
+SCM play_music(SCM scm_music){
+
+}
+
+void init_sound(){
+	Mix_Init(0);
+
+	scm_c_define_gsubr("load-music", 1, 0, 0, load_music);
+	scm_c_export("load-music", NULL);
+
+	scm_c_define_gsubr("load-chunk", 1, 0, 0, load_chunk);
+	scm_c_export("load-chunk", NULL);
+
+	scm_c_define_gsubr("play-music", 1, 0, 0, load_music);
+	scm_c_export("play-music", NULL);
+
+	scm_c_define_gsubr("play-chunk", 1, 0, 0, play_chunk);
+	scm_c_export("play-chunk", NULL);
 }
