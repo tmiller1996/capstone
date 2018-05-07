@@ -72,7 +72,6 @@
 
 (while running
     (poll-input ctx)
-    (set! mouse (mouse-pos ctx))
     (render)
     (input))
 
