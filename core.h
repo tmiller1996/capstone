@@ -1,11 +1,9 @@
 #ifndef CORE_H
 #define CORE_H
 #pragma once
-
 #include <SDL.h>
 #include <libguile.h>
 #include <stdbool.h>
-
 struct play_context {
 	struct {
 		uint8_t *last;
@@ -21,9 +19,7 @@ struct play_context {
 	SDL_Renderer *renderer;
 	bool close_requested;
 };
-
 typedef struct play_context playctx;
-
 extern playctx *scm_to_playctx(SCM ctx);
 extern SCM scm_from_playctx(playctx *ctx);
 #endif

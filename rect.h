@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <SDL.h>
 #include <libguile.h>
-
-bool scm_to_rect(SCM scm_rect, SDL_Rect *rect);
-SCM scm_from_rect(SDL_Rect *rect);
+extern bool scm_to_rect(SCM scm_rect, SDL_Rect *rect);
+extern SCM scm_from_rect(SDL_Rect *rect);
 #endif
