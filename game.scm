@@ -7,19 +7,16 @@
 (define width 800)
 (define height 600)
 
-(define ctx (create-play-context "Example Game" width height))
-
-(define player (load-texture ctx "assets/player.bmp" '(255 255 255 255)))
-
 (define red '(255 0 0 255))
 (define green '(0 255 0 255))
 (define blue '(0 0 255 255))
 (define black '(0 0 0 255))
+(define white '(255 255 255 255))
 (define purple '(127 0 127 255))
 (define orange '(255 165 0 255))
 
-(define bg-color black)
-
+(define ctx (create-play-context "Example Game" width height))
+(define player (load-texture ctx "assets/player.bmp" white))
 (define font (open-font "assets/font.ttf" 24))
 
 (define player-x 0)
@@ -30,7 +27,6 @@
 
 (define running #t)
 (define splash #t)
-(define mouse (cons 0 0))
 
 (define render-splash (lambda ()
     (render-clear ctx purple)
