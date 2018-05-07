@@ -33,13 +33,13 @@
 (define mouse (cons 0 0))
 
 (define render-splash (lambda ()
-    (render-clear ctx '(127 0 127 255))
-    (render-texture-xy ctx (font-render-text-solid ctx font "Press Enter to begin" orange) '(20 . 20))
+    (render-clear ctx purple)
+    (render-texture-xy ctx (font-render-text-solid ctx font "Press Enter to begin" orange) '(300 . 120))
     (render-present ctx)))
 
 (define render-game (lambda ()
-    (write "render-game")
-    (newline)))
+    (render-clear ctx green)
+    (render-present ctx)))
 
 (define render (lambda ()
     (cond (splash (render-splash))
@@ -50,8 +50,7 @@
           (set! splash #f))))
 
 (define input-game (lambda ()
-    (write "input-game")
-    (newline)))
+    #t))
 
 (define input (lambda ()
     (when (close-requested ctx)
