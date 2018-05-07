@@ -9,7 +9,7 @@
 
 (define ctx (create-play-context "Example Game" width height))
 
-(define face (load-texture ctx "assets/face.bmp"))
+(define player (load-texture ctx "assets/player.bmp" '(255 255 255 255)))
 
 (define red '(255 0 0 255))
 (define green '(0 255 0 255))
@@ -22,11 +22,11 @@
 
 (define font (open-font "assets/font.ttf" 24))
 
-(define face-x 0)
-(define face-y 0)
+(define player-x 0)
+(define player-y 0)
 
-(define face-w (car (texture-size face)))
-(define face-h (cdr (texture-size face)))
+(define player-w (car (texture-size player)))
+(define player-h (cdr (texture-size player)))
 
 (define running #t)
 (define splash #t)
@@ -39,6 +39,7 @@
 
 (define render-game (lambda ()
     (render-clear ctx green)
+    (render-texture-xy ctx player `(,player-x . ,player-y))
     (render-present ctx)))
 
 (define render (lambda ()
@@ -50,7 +51,22 @@
           (set! splash #f))))
 
 (define input-game (lambda ()
-    #t))
+    (when (key-down ctx KEY_w)
+          (set! player-y (+ player-y -1)))
+    (when (key-down ctx KEY_a)
+          (set! player-x (+ player-x -1)))
+    (when (key-down ctx KEY_s)
+          (set! player-y (+ player-y 1)))
+    (when (key-down ctx KEY_d)
+          (set! player-x (+ player-x 1)))
+    (when (< player-x 0)
+          (set! player-x 0))
+    (when (< player-y 0)
+          (set! player-y 0))
+    (when (> (+ player-x player-w -1) width)
+          (set! player-x (- width player-w -1)))
+    (when (> (+ player-y player-h -1) height)
+          (set! player-y (- height player-h -1)))))
 
 (define input (lambda ()
     (when (close-requested ctx)
@@ -61,38 +77,7 @@
 (while running
     (poll-input ctx)
     (set! mouse (mouse-pos ctx))
-    ;;(render-clear ctx bg-color)
-    ;;(render-texture-xy ctx face `(,face-x . ,face-y))
-    ;;(render-present ctx)
     (render)
-    (input)
-    #|(when #f
-        (write (car mouse)) (write-char #\space) (write (cdr mouse)) (newline))
-    (when (close-requested ctx)
-        (set! running #f))
-    (when (key-down ctx KEY_1)
-        (set! bg-color red))
-    (when (key-down ctx KEY_2)
-        (set! bg-color green))
-    (when (key-down ctx KEY_3)
-        (set! bg-color blue))
-    (when (key-down ctx KEY_4)
-        (set! bg-color black))
-    (when (key-down ctx KEY_w)
-        (set! face-y (+ face-y -1)))
-    (when (key-down ctx KEY_a)
-        (set! face-x (+ face-x -1)))
-    (when (key-down ctx KEY_s)
-        (set! face-y (+ face-y 1)))
-    (when (key-down ctx KEY_d)
-        (set! face-x (+ face-x 1)))
-    (when (< face-x 0)
-        (set! face-x 0))
-    (when (< face-y 0)
-        (set! face-y 0))
-    (when (> (+ face-x face-w -1) width)
-        (set! face-x (- width face-w -1)))
-    (when (> (+ face-y face-h -1) height)
-        (set! face-y (- height face-h -1)))|#)
+    (input))
 
 (destroy-context ctx)

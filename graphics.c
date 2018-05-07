@@ -80,7 +80,7 @@ static SCM load_texture(SCM scm_ctx, SCM scm_path, SCM scm_colorkey){
 	if(ctx){
 		char *path = scm_to_locale_string(scm_path);
 		SDL_Surface *sfc = IMG_Load(path);
-		if(scm_colorkey != SCM_UNDEFINED){
+		if(scm_is_true(scm_colorkey)){
 			SDL_Color colorkey;
 			if(scm_to_rgba(scm_colorkey, &colorkey)){
 				SDL_SetColorKey(sfc, SDL_TRUE, rgba_to_uint32(&colorkey));
