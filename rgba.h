@@ -4,11 +4,8 @@
 
 #include <stdbool.h>
 #include <libguile.h>
+#include <SDL.h>
 
-struct rgba {
-	uint8_t r, g, b, a;
-};
-
-SCM scm_from_rgba(struct rgba *rgba);
-bool scm_to_rgba(SCM scm_rgba, struct rgba *rgba);
+SCM scm_from_rgba(SDL_Color *color);
+bool scm_to_rgba(SCM scm_rgba, SDL_Color *color);
 #endif

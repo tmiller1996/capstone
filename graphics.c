@@ -34,6 +34,46 @@ static void texture_finalizer(void *_handle, void *unused){
 	}
 }
 
+static texture_handle *create_handle(SDL_Texture *tex){
+	texture_handle *handle = GC_malloc(sizeof(texture_handle));
+	if(handle){
+		GC_register_finalizer(handle, NULL, texture_finalizer, 0, 0);
+		handle->tex = tex;
+		SDL_QueryTexture(handle->tex, &handle->format, &handle->access, &handle->w, &handle->h);
+		return handle;
+	}
+	else{
+		return NULL;
+	}
+}
+
+SCM texture_from_surface(const char *__SCM_FUNCTION__, SDL_Renderer *renderer, SDL_Surface *surface){
+	if(renderer){
+		if(surface){
+			SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
+			if(tex){
+				texture_handle *handle = create_handle(tex);
+				if(handle){
+					return scm_from_tex(handle);
+				}
+				else{
+					SDL_DestroyTexture(tex);
+					return scm_errorstr("create_handle returned NULL");
+				}
+			}
+			else{
+				return scm_errorstrf("SDL_CreateTextureFromSurface error: %s", SDL_GetError());
+			}
+		}
+		else{
+			return scm_errorstr("invalid surface");
+		}
+	}
+	else{
+		return scm_errorstr("invalid renderer");
+	}
+}
+
 #define __SCM_FUNCTION__ "load-texture"
 static SCM load_texture(SCM scm_ctx, SCM scm_path){
 	playctx *ctx = scm_to_playctx(scm_ctx);
@@ -43,11 +83,8 @@ static SCM load_texture(SCM scm_ctx, SCM scm_path){
 		if(sfc){
 			SDL_Texture *tex = SDL_CreateTextureFromSurface(ctx->renderer, sfc);
 			if(tex){
-				texture_handle *handle = GC_malloc(sizeof(texture_handle));
+				texture_handle *handle = create_handle(tex);
 				if(handle){
-					GC_register_finalizer(handle, NULL, texture_finalizer, 0, 0);
-					handle->tex = tex;
-					SDL_QueryTexture(handle->tex, &handle->format, &handle->access, &handle->w, &handle->h);
 					free(path);
 					SDL_FreeSurface(sfc);
 					return scm_from_tex(handle);
@@ -91,7 +128,7 @@ static SCM texture_size(SCM scm_tex){
 #define __SCM_FUNCTION__ "render-clear"
 static SCM render_clear(SCM scm_ctx, SCM scm_rgba){
 	playctx *ctx = scm_to_playctx(scm_ctx);
-	struct rgba rgba;
+	SDL_Color rgba;
 	if(scm_to_rgba(scm_rgba, &rgba)){
 		if(SDL_SetRenderDrawColor(ctx->renderer, rgba.r, rgba.g, rgba.b, rgba.a) == 0){
 			if(SDL_RenderClear(ctx->renderer) == 0){

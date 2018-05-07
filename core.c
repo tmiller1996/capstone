@@ -14,14 +14,13 @@
 #include "ttf.h"
 #include "error.h"
 
-extern playctx *scm_to_playctx(SCM ctx){
+playctx *scm_to_playctx(SCM ctx){
 	return (playctx*) scm_to_long(ctx);
 }
 
-extern SCM scm_from_playctx(playctx *ctx){
+SCM scm_from_playctx(playctx *ctx){
 	return scm_from_long((long) ctx);
 }
-
 
 static void playctx_finalizer(void *_ctx, void *unused){
 	playctx *ctx = (playctx*) _ctx;

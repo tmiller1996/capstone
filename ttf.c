@@ -1,5 +1,8 @@
 #include "ttf.h"
 #include "error.h"
+#include "core.h"
+#include "rgba.h"
+#include "graphics.h"
 
 #include <SDL_ttf.h>
 #include <gc.h>
@@ -343,7 +346,7 @@ static SCM font_provides_glyph_p(SCM font, SCM scm_glyph){
 }
 #undef __SCM_FUNCTION__
 
-#define __SCM_FUNCTION__ ""
+#define __SCM_FUNCTION__ "font-glyph-minx"
 static SCM font_glyph_minx(SCM font, SCM scm_glyph){
 	font_handle *handle = scm_to_font(font);
 	if(handle && handle->font){
@@ -358,7 +361,7 @@ static SCM font_glyph_minx(SCM font, SCM scm_glyph){
 }
 #undef __SCM_FUNCTION__
 
-#define __SCM_FUNCTION__ ""
+#define __SCM_FUNCTION__ "font-glyph-maxx"
 static SCM font_glyph_maxx(SCM font, SCM scm_glyph){
 	font_handle *handle = scm_to_font(font);
 	if(handle && handle->font){
@@ -373,7 +376,7 @@ static SCM font_glyph_maxx(SCM font, SCM scm_glyph){
 }
 #undef __SCM_FUNCTION__
 
-#define __SCM_FUNCTION__ ""
+#define __SCM_FUNCTION__ "font-glyph-miny"
 static SCM font_glyph_miny(SCM font, SCM scm_glyph){
 	font_handle *handle = scm_to_font(font);
 	if(handle && handle->font){
@@ -388,7 +391,7 @@ static SCM font_glyph_miny(SCM font, SCM scm_glyph){
 }
 #undef __SCM_FUNCTION__
 
-#define __SCM_FUNCTION__ ""
+#define __SCM_FUNCTION__ "font-glyph-maxy"
 static SCM font_glyph_maxy(SCM font, SCM scm_glyph){
 	font_handle *handle = scm_to_font(font);
 	if(handle && handle->font){
@@ -403,7 +406,7 @@ static SCM font_glyph_maxy(SCM font, SCM scm_glyph){
 }
 #undef __SCM_FUNCTION__
 
-#define __SCM_FUNCTION__ ""
+#define __SCM_FUNCTION__ "font-glyph-advance"
 static SCM font_glyph_advance(SCM font, SCM scm_glyph){
 	font_handle *handle = scm_to_font(font);
 	if(handle && handle->font){
@@ -414,6 +417,221 @@ static SCM font_glyph_advance(SCM font, SCM scm_glyph){
 	}
 	else{
 		return scm_errorstr("invalid handle");
+	}
+}
+#undef __SCM_FUNCTION__
+
+#define __SCM_FUNCTION__ "font-size-text"
+static SCM font_size_text(SCM font, SCM scm_text){
+	font_handle *handle = scm_to_font(font);
+	if(handle && handle->font){
+		char *text = scm_to_locale_string(scm_text);
+		int w, h;
+		if(TTF_SizeText(handle->font, text, &w, &h)){
+			return scm_cons(scm_from_int(w), scm_from_int(h));
+		}
+		else{
+			free(text);
+			return scm_errorstrf("TTF_SizeText error: %s", TTF_GetError());
+		}
+	}
+	else{
+		return scm_errorstr("invalid handle");
+	}
+}
+#undef __SCM_FUNCTION__
+
+#define __SCM_FUNCTION__ "font-render-text-solid"
+static SCM font_render_text_solid(SCM scm_ctx, SCM font, SCM scm_text, SCM scm_color){
+	playctx *ctx = scm_to_playctx(scm_ctx);
+	if(ctx){
+		font_handle *handle = scm_to_font(font);
+		if(handle && handle->font){
+			char *text = scm_to_locale_string(scm_text);
+			SDL_Color color;
+			if(scm_to_rgba(scm_color, &color)){
+				SDL_Surface *sfc = TTF_RenderText_Solid(handle->font, text, color);
+				if(sfc){
+					free(text);
+					return texture_from_surface(__SCM_FUNCTION__, ctx->renderer, sfc);
+				}
+				else{
+					free(text);
+					return scm_errorstrf("TTF_RenderText_Solid error: %s", TTF_GetError());
+				}
+			}
+			else{
+				free(text);
+				return scm_errorstr("expected color");
+			}
+		}
+		else{
+			return scm_errorstr("invalid handle");
+		}
+	}
+	else{
+		return scm_errorstr("invalid context");
+	}
+}
+#undef __SCM_FUNCTION__
+
+#define __SCM_FUNCTION__ "font-render-glyph-solid"
+static SCM font_render_glyph_solid(SCM scm_ctx, SCM font, SCM scm_glyph, SCM scm_color){
+	playctx *ctx = scm_to_playctx(scm_ctx);
+	if(ctx){
+		font_handle *handle = scm_to_font(font);
+		if(handle && handle->font){
+			uint16_t glyph = scm_to_uint16(scm_char_to_integer(scm_glyph));
+			SDL_Color color;
+			if(scm_to_rgba(scm_color, &color)){
+				SDL_Surface *sfc = TTF_RenderGlyph_Solid(handle->font, glyph, color);
+				if(sfc){
+					return texture_from_surface(__SCM_FUNCTION__, ctx->renderer, sfc);
+				}
+				else{
+					return scm_errorstrf("TTF_RenderGlyph_Solid error: %s", TTF_GetError());
+				}
+			}
+			else{
+				return scm_errorstr("expected color");
+			}
+		}
+		else{
+			return scm_errorstr("invalid handle");
+		}
+	}
+	else{
+		return scm_errorstr("invalid context");
+	}
+}
+#undef __SCM_FUNCTION__
+
+#define __SCM_FUNCTION__ "font-render-text-shaded"
+static SCM font_render_text_shaded(SCM scm_ctx, SCM font, SCM scm_text, SCM scm_fg, SCM scm_bg){
+	playctx *ctx = scm_to_playctx(scm_ctx);
+	if(ctx){
+		font_handle *handle = scm_to_font(font);
+		if(handle && handle->font){
+			char *text = scm_to_locale_string(scm_text);
+			SDL_Color fg, bg;
+			if(scm_to_rgba(scm_fg, &fg) || scm_to_rgba(scm_bg, &bg)){
+				SDL_Surface *sfc = TTF_RenderText_Shaded(handle->font, text, fg, bg);
+				if(sfc){
+					free(text);
+					return texture_from_surface(__SCM_FUNCTION__, ctx->renderer, sfc);
+				}
+				else{
+					free(text);
+					return scm_errorstrf("TTF_RenderText_Shaded error: %s", TTF_GetError());
+				}
+			}
+			else{
+				free(text);
+				return scm_errorstr("expected color");
+			}
+		}
+		else{
+			return scm_errorstr("invalid handle");
+		}
+	}
+	else{
+		return scm_errorstr("invalid context");
+	}
+}
+#undef __SCM_FUNCTION__
+
+#define __SCM_FUNCTION__ "font-render-glyph-shaded"
+static SCM font_render_glyph_shaded(SCM scm_ctx, SCM font, SCM scm_glyph, SCM scm_fg, SCM scm_bg){
+	playctx *ctx = scm_to_playctx(scm_ctx);
+	if(ctx){
+		font_handle *handle = scm_to_font(font);
+		if(handle && handle->font){
+			uint16_t glyph = scm_to_uint16(scm_char_to_integer(scm_glyph));
+			SDL_Color fg, bg;
+			if(scm_to_rgba(scm_fg, &fg) || scm_to_rgba(scm_bg, &bg)){
+				SDL_Surface *sfc = TTF_RenderGlyph_Shaded(handle->font, glyph, fg, bg);
+				if(sfc){
+					return texture_from_surface(__SCM_FUNCTION__, ctx->renderer, sfc);
+				}
+				else{
+					return scm_errorstrf("TTF_RenderGlyph_Shaded error: %s", TTF_GetError());
+				}
+			}
+			else{
+				return scm_errorstr("expected color");
+			}
+		}
+		else{
+			return scm_errorstr("invalid handle");
+		}
+	}
+	else{
+		return scm_errorstr("invalid context");
+	}
+}
+#undef __SCM_FUNCTION__
+
+#define __SCM_FUNCTION__ "font-render-text-blended"
+static SCM font_render_text_blended(SCM scm_ctx, SCM font, SCM scm_text, SCM scm_color){
+	playctx *ctx = scm_to_playctx(scm_ctx);
+	if(ctx){
+		font_handle *handle = scm_to_font(font);
+		if(handle && handle->font){
+			char *text = scm_to_locale_string(scm_text);
+			SDL_Color color;
+			if(scm_to_rgba(scm_color, &color)){
+				SDL_Surface *sfc = TTF_RenderText_Blended(handle->font, text, color);
+				if(sfc){
+					free(text);
+					return texture_from_surface(__SCM_FUNCTION__, ctx->renderer, sfc);
+				}
+				else{
+					free(text);
+					return scm_errorstrf("TTF_RenderText_Blended error: %s", TTF_GetError());
+				}
+			}
+			else{
+				free(text);
+				return scm_errorstr("expected color");
+			}
+		}
+		else{
+			return scm_errorstr("invalid handle");
+		}
+	}
+	else{
+		return scm_errorstr("invalid context");
+	}
+}
+#undef __SCM_FUNCTION__
+
+#define __SCM_FUNCTION__ "font-render-glyph-blended"
+static SCM font_render_glyph_blended(SCM scm_ctx, SCM font, SCM scm_glyph, SCM scm_color){
+	playctx *ctx = scm_to_playctx(scm_ctx);
+	if(ctx){
+		font_handle *handle = scm_to_font(font);
+		if(handle && handle->font){
+			uint16_t glyph = scm_to_uint16(scm_char_to_integer(scm_glyph));
+			SDL_Color color;
+			if(scm_to_rgba(scm_color, &color)){
+				SDL_Surface *sfc = TTF_RenderGlyph_Blended(handle->font, glyph, color);
+				if(sfc){
+					return texture_from_surface(__SCM_FUNCTION__, ctx->renderer, sfc);
+				}
+				else{
+					return scm_errorstrf("TTF_RenderGlyph_Blended error: %s", TTF_GetError());
+				}
+			}
+			else{
+				return scm_errorstr("expected color");
+			}
+		}
+		else{
+			return scm_errorstr("invalid handle");
+		}
+	}
+	else{
+		return scm_errorstr("invalid context");
 	}
 }
 #undef __SCM_FUNCTION__
@@ -508,4 +726,25 @@ void init_ttf(){
 
 	scm_c_define_gsubr("font-glyph-advance", 2, 0, 0, font_glyph_advance);
 	scm_c_export("font-glyph-advance");
+
+	scm_c_define_gsubr("font-size-text", 2, 0, 0, font_size_text);
+	scm_c_export("font-size-text");
+
+	scm_c_define_gsubr("font-render-text-solid", 4, 0, 0, font_render_text_solid);
+	scm_c_export("font-render-text-solid");
+
+	scm_c_define_gsubr("font-render-glyph-solid", 4, 0, 0, font_render_glyph_solid);
+	scm_c_export("font-render-glyph-solid");
+
+	scm_c_define_gsubr("font-render-text-shaded", 5, 0, 0, font_render_text_shaded);
+	scm_c_export("font-render-text-shaded");
+
+	scm_c_define_gsubr("font-render-glyph-shaded", 5, 0, 0, font_render_glyph_shaded);
+	scm_c_export("font-render-glyph-shaded");
+
+	scm_c_define_gsubr("font-render-text-blended", 4, 0, 0, font_render_text_blended);
+	scm_c_export("font-render-text-blended");
+
+	scm_c_define_gsubr("font-render-glyph-blended", 4, 0, 0, font_render_glyph_blended);
+	scm_c_export("font-render-glyph-blended");
 }
