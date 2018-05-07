@@ -42,21 +42,22 @@
     (render-present ctx)))
 
 (define render (lambda ()
-    (cond (splash (render-splash))
-          (else (render-game)))))
+  (if splash 
+    (render-splash)
+    (render-game))))
 
 (define input-splash (lambda ()
-    (when (key-down ctx KEY_RETURN)
-          (set! splash #f))))
+  (when (key-down ctx KEY_RETURN)
+    (set! splash #f))))
 
 (define input-game (lambda ()
   (when (key-down ctx KEY_w)
     ;(set! player-vy -4))
     (jump))
   (when (key-down ctx KEY_a)
-    (set! player-vx -4))
-  (when (key-down ctx KEY_s)
-    (set! player-vy 4))))
+    (set! player-x -4))
+  (when (key-down ctx KEY_d)
+    (set! player-x 4))))
 
 (define input (lambda ()
   (when (close-requested ctx)
@@ -74,7 +75,7 @@
     (set! player-vy -40))))
 
 (define player-update (lambda ()
-  (gravity)
+  ; (gravity)
   (set! player-x (+ player-x player-vx))
   (set! player-y (+ player-y player-vy))
   (when (< player-x 0)
