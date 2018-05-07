@@ -71,7 +71,7 @@
 
 (define (jump)
   (when (not jumping)
-    (set! jumping #t)))
+    (set! jumping (get-ticks))))
 
 (define (player-update)
   (gravity)

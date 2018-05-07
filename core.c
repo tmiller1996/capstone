@@ -1,9 +1,8 @@
-#include "core.h"
-
 #include <libguile.h>
 #include <SDL_image.h>
 #include <gc.h>
 
+#include "core.h"
 #include "input.h"
 #include "keytable.h"
 #include "rgba.h"
@@ -13,6 +12,7 @@
 #include "sound.h"
 #include "ttf.h"
 #include "error.h"
+#include "ticks.h"
 
 playctx *scm_to_playctx(SCM ctx){
 	return (playctx*) scm_to_long(ctx);
@@ -122,4 +122,5 @@ void init_play_core(void *unused){
 	init_graphics();
 	init_sound();
 	init_ttf();
+	init_ticks();
 }
