@@ -1,5 +1,6 @@
 #include "input.h"
 #include "core.h"
+#include "error.h"
 
 static void ctx_poll_mouse(playctx *ctx){
 	uint32_t state = SDL_GetMouseState(&ctx->mouse.x, &ctx->mouse.y);
@@ -33,26 +34,33 @@ static void ctx_poll_input(playctx *ctx){
 	ctx_poll_mouse(ctx);
 }
 
+#define __SCM_FUNCTION__ "poll-input"
 static SCM poll_input(SCM scm_ctx){
 	playctx *ctx = scm_to_playctx(scm_ctx);
 	if(ctx){
 		ctx_poll_input(ctx);
+		return SCM_BOOL_T;
 	}
-	return SCM_BOOL_T;
+	else{
+		return scm_errorstr("invalid context");
+	}
 }
+#undef __SCM_FUNCTION__
 
+#define __SCM_FUNCTION__ "mouse-pos"
 static SCM mouse_pos(SCM scm_ctx){
-	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	playctx *ctx = scm_to_playctx(scm_ctx);
 	if(ctx){
 		return scm_cons(scm_from_int(ctx->mouse.x), scm_from_int(ctx->mouse.y));
-	} else {
-		// TODO error here
-		return SCM_BOOL_F;
+	}
+	else{
+		return scm_errorstr("invalid context");
 	}
 }
+#undef __SCM_FUNCTION__
 
 static SCM key_pressed(SCM scm_ctx, SCM scm_key){
-	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	playctx *ctx = scm_to_playctx(scm_ctx);
 	if(ctx){
 		SDL_Keycode key = (SDL_Keycode) scm_to_uint8(scm_key);
 		SDL_Scancode scan = SDL_GetScancodeFromKey(key);
@@ -65,19 +73,29 @@ static SCM key_pressed(SCM scm_ctx, SCM scm_key){
 }
 
 static SCM key_down(SCM scm_ctx, SCM scm_key){
-	playctx *ctx = (playctx*) scm_to_long(scm_ctx);
+	playctx *ctx = scm_to_playctx(scm_ctx);
 	if(ctx){
 		SDL_Keycode key = (SDL_Keycode) scm_to_uint8(scm_key);
 		SDL_Scancode scan = SDL_GetScancodeFromKey(key);
 		bool current = ctx->keyboard.current ? ctx->keyboard.current[scan] : false;
 		return current ? SCM_BOOL_T : SCM_BOOL_F;
 	}
-	return SCM_BOOL_F;
+	else{
+		return SCM_BOOL_F;
+	}
 }
 
 static SCM mouse_pressed(SCM scm_ctx, SCM scm_mbutton){
-	// TODO
-	return SCM_BOOL_F;
+	uint32_t mbutton = scm_to_uint32(scm_mbutton);
+	playctx *ctx = scm_to_playctx(scm_ctx);
+	if(ctx){
+		return ((ctx->mouse.current & SDL_BUTTON(mbutton)) && 
+			   !(ctx->mouse.last & SDL_BUTTON(mbutton))) ? 
+			   SCM_BOOL_T : SCM_BOOL_F;
+	}
+	else{
+		return SCM_BOOL_F;
+	}
 }
 
 static SCM close_requested(SCM scm_ctx){
@@ -85,7 +103,9 @@ static SCM close_requested(SCM scm_ctx){
 	if(ctx){
 		return ctx->close_requested ? SCM_BOOL_T : SCM_BOOL_F;
 	}
-	return SCM_BOOL_F;
+	else{
+		return SCM_BOOL_F;
+	}
 }
 
 void init_input(){

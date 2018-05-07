@@ -484,9 +484,9 @@ static SDL_Keycode keycode[] = {
 };
 
 static uint32_t mousecode[] = {
-	SDL_BUTTON(SDL_BUTTON_LEFT),
-	SDL_BUTTON(SDL_BUTTON_MIDDLE),
-	SDL_BUTTON(SDL_BUTTON_RIGHT),
+	SDL_BUTTON_LEFT,
+	SDL_BUTTON_MIDDLE,
+	SDL_BUTTON_RIGHT,
 };
 
 static const char *mousestr[] = {

@@ -1,4 +1,5 @@
 #include "sound.h"
+#include "error.h"
 
 #include <libguile.h>
 #include <gc.h>
@@ -46,6 +47,7 @@ static void music_finalizer(void *_handle, void *unused){
 	}
 }
 
+#define __SCM_FUNCTION__ "load-music"
 SCM load_music(SCM scm_path) {
 	char *path = scm_to_locale_string(scm_path);
 	music_handle *handle = GC_malloc(sizeof(music_handle));
@@ -54,19 +56,25 @@ SCM load_music(SCM scm_path) {
 		if(music){
 			handle->music = music;
 			GC_register_finalizer(handle, music_finalizer, NULL, 0, 0);
+			free(path);
 			return scm_from_music(handle);
 		}
 		else {
 			GC_free(handle);
-			return SCM_BOOL_F;
+			SCM err = scm_errorstrf("MixLoadMUS returned NULL for '%s' with error: %s", path, Mix_GetError());
+			free(path);
+			return err;
 		}
 	}
 	else{
-		return SCM_BOOL_F;
+		free(path);
+		return scm_errorstr("GC_malloc returned NULL");
 	}
 }
+#undef __SCM_FUNCTION__
 
-SCM load_chunk(SCM scm_path) {
+#define __SCM_FUNCTION__ "load-sound"
+SCM load_sound(SCM scm_path) {
 	char *path = scm_to_locale_string(scm_path);
 	chunk_handle *handle = GC_malloc(sizeof(chunk_handle));
 	if(handle){
@@ -74,24 +82,31 @@ SCM load_chunk(SCM scm_path) {
 		if(chunk){
 			handle->chunk = chunk;
 			GC_register_finalizer(handle, chunk_finalizer, NULL, 0, 0);
+			free(path);
 			return scm_from_chunk(handle);
 		}
 		else{
 			GC_free(handle);
-			return SCM_BOOL_F;
+			SCM err = scm_errorstrf("Mix_LoadWAV returned NULL for '%s' with error: %s", path, Mix_GetError());
+			free(path);
+			return err;
 		}
 	}
 	else{
-		return SCM_BOOL_F;
+		free(path);
+		return scm_errorstr("GC_malloc returned NULL");
 	}
 }
+#undef __SCM_FUNCTION__
 
 SCM play_sound(SCM scm_chunk) {
-	
+	// TODO
+	return SCM_BOOL_F;
 }
 
 SCM play_music(SCM scm_music){
-
+	// TODO
+	return SCM_BOOL_F;
 }
 
 void init_sound(){
@@ -100,12 +115,12 @@ void init_sound(){
 	scm_c_define_gsubr("load-music", 1, 0, 0, load_music);
 	scm_c_export("load-music", NULL);
 
-	scm_c_define_gsubr("load-chunk", 1, 0, 0, load_chunk);
-	scm_c_export("load-chunk", NULL);
+	scm_c_define_gsubr("load-sound", 1, 0, 0, load_sound);
+	scm_c_export("load-sound", NULL);
 
 	scm_c_define_gsubr("play-music", 1, 0, 0, load_music);
 	scm_c_export("play-music", NULL);
 
-	scm_c_define_gsubr("play-chunk", 1, 0, 0, play_chunk);
-	scm_c_export("play-chunk", NULL);
+	scm_c_define_gsubr("play-sound", 1, 0, 0, play_sound);
+	scm_c_export("play-sound", NULL);
 }

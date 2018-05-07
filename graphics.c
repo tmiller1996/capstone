@@ -3,6 +3,7 @@
 #include "rgba.h"
 #include "rect.h"
 #include "point.h"
+#include "error.h"
 
 #include <libguile.h>
 #include <gc.h>
@@ -33,6 +34,7 @@ static void texture_finalizer(void *_handle, void *unused){
 	}
 }
 
+#define __SCM_FUNCTION__ "load-texture"
 static SCM load_texture(SCM scm_ctx, SCM scm_path){
 	playctx *ctx = scm_to_playctx(scm_ctx);
 	if(ctx){
@@ -76,31 +78,40 @@ static SCM load_texture(SCM scm_ctx, SCM scm_path){
 		return err;
 	}
 }
+#undef __SCM_FUNCTION__
 
+#define __SCM_FUNCTION__ "texture-size"
 static SCM texture_size(SCM scm_tex){
 	texture_handle *handle = scm_to_tex(scm_tex);
 	return scm_cons(scm_from_int(handle->w), scm_from_int(handle->h));
 }
+#undef __SCM_FUNCTION__
 
 
+#define __SCM_FUNCTION__ "render-clear"
 static SCM render_clear(SCM scm_ctx, SCM scm_rgba){
 	playctx *ctx = scm_to_playctx(scm_ctx);
 	struct rgba rgba;
-	if(!scm_to_rgba(scm_rgba, &rgba)){
-		// TODO error
-		return SCM_BOOL_F;
+	if(scm_to_rgba(scm_rgba, &rgba)){
+		if(SDL_SetRenderDrawColor(ctx->renderer, rgba.r, rgba.g, rgba.b, rgba.a) == 0){
+			if(SDL_RenderClear(ctx->renderer) == 0){
+				return SCM_BOOL_T;
+			}
+			else{
+				return scm_errorstrf("SDL_RenderClear error: %s", SDL_GetError());
+			}
+		}
+		else{
+			return scm_errorstrf("SDL_SetRenderDrawColor error: %s", SDL_GetError());
+		}
 	}
-	if(SDL_SetRenderDrawColor(ctx->renderer, rgba.r, rgba.g, rgba.b, rgba.a) != 0){
-		// TODO error
-		return SCM_BOOL_F;
+	else{
+		return scm_errorstr("Expected RGBA value in list form");
 	}
-	if(SDL_RenderClear(ctx->renderer) != 0){
-		// TODO error
-		return SCM_BOOL_F;
-	}
-	return SCM_BOOL_T;
 }
+#undef __SCM_FUNCTION__
 
+#define __SCM_FUNCTION__ "render-present"
 static SCM render_present(SCM scm_ctx){
 	playctx *ctx = scm_to_playctx(scm_ctx);
 	if(ctx){
@@ -108,7 +119,9 @@ static SCM render_present(SCM scm_ctx){
 	}
 	return SCM_BOOL_F;
 }
+#undef __SCM_FUNCTION__
 
+#define __SCM_FUNCTION__ "render-texture-xy"
 static SCM render_texture_xy(SCM scm_ctx, SCM scm_tex, SCM scm_xy){
 	playctx *ctx = scm_to_playctx(scm_ctx);
 	texture_handle *handle = scm_to_tex(scm_tex);
@@ -133,7 +146,9 @@ static SCM render_texture_xy(SCM scm_ctx, SCM scm_tex, SCM scm_xy){
 	}
 	return SCM_BOOL_F;
 }
+#undef __SCM_FUNCTION__
 
+#define __SCM_FUNCTION__ "render-texture-xywh"
 static SCM render_texture_xywh(SCM scm_ctx, SCM scm_tex, SCM scm_xywh){
 	playctx *ctx = scm_to_playctx(scm_ctx);
 	texture_handle *handle = scm_to_tex(scm_tex);
@@ -153,6 +168,7 @@ static SCM render_texture_xywh(SCM scm_ctx, SCM scm_tex, SCM scm_xywh){
 	}
 	return SCM_BOOL_F;
 }
+#undef __SCM_FUNCTION__
 
 void init_graphics(){
 	scm_c_define_gsubr("render-clear", 2, 0, 0, render_clear);

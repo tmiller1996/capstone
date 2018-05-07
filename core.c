@@ -12,6 +12,7 @@
 #include "graphics.h"
 #include "sound.h"
 #include "ttf.h"
+#include "error.h"
 
 extern playctx *scm_to_playctx(SCM ctx){
 	return (playctx*) scm_to_long(ctx);
@@ -40,45 +41,46 @@ static void playctx_finalizer(void *_ctx, void *unused){
 	}
 }
 
+#define __SCM_FUNCTION__ "create-play-context"
 static SCM create_context(SCM scm_title, SCM scm_width, SCM scm_height){
-	// TODO rewrite this fn
-	char *title = scm_to_locale_string(scm_title);
 	int width = scm_to_int(scm_width);
 	int height = scm_to_int(scm_height);
-
-	playctx *ctx = GC_malloc(sizeof(playctx));
-	GC_register_finalizer(ctx, playctx_finalizer, NULL, 0, 0);
-	if(!ctx){
-		free(title);
-		// TODO error here
-		return scm_from_long(0x0);
+	char *title = scm_to_locale_string(scm_title);
+	SDL_Window *window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
+	if(window){
+		SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+		if(renderer){
+			playctx *ctx = GC_malloc(sizeof(playctx));
+			if(ctx){
+				ctx->close_requested = false;
+				ctx->keyboard.current = ctx->keyboard.last = NULL;
+				ctx->mouse.x = ctx->mouse.y = 0;
+				ctx->mouse.last = ctx->mouse.current = 0;
+				ctx->window = window;
+				ctx->renderer = renderer;
+				GC_register_finalizer(ctx, playctx_finalizer, NULL, 0, 0);
+				free(title);
+				return scm_from_playctx(ctx);
+			}
+			else{
+				SDL_DestroyRenderer(renderer);
+				SDL_DestroyWindow(window);
+				free(title);
+				return scm_errorstr("GC_malloc failed");
+			}
+		}
+		else{
+			SDL_DestroyWindow(window);
+			free(title);
+			return scm_errorstrf("SDL_CreateRenderer error: %s", SDL_GetError());
+		}
 	}
-
-	ctx->close_requested = false;
-	ctx->keyboard.current = ctx->keyboard.last = NULL;
-	ctx->mouse.x = ctx->mouse.y = 0;
-	ctx->mouse.current = ctx->mouse.last = 0x0;
-
-	ctx->window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
-	if(!ctx->window){
-		GC_free(ctx);
+	else{
 		free(title);
-		// TODO error here
-		return scm_from_long(0x0);
+		return scm_errorstrf("SDL_CreateWindow error: %s", SDL_GetError());
 	}
-
-	ctx->renderer = SDL_CreateRenderer(ctx->window, -1, SDL_RENDERER_ACCELERATED);
-	if(!ctx->renderer){
-		SDL_DestroyWindow(ctx->window);
-		ctx->window = NULL;
-		GC_free(ctx);
-		free(title);
-		// TODO error here
-		return scm_from_long(0x0);
-	}
-	free(title);
-	return scm_from_long((long) ctx);
 }
+#undef __SCM_FUNCTION__
 
 void init_play_core(void *unused){
 	if(SDL_Init(0) != 0){

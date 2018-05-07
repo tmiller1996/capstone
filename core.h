@@ -26,7 +26,4 @@ typedef struct play_context playctx;
 
 extern playctx *scm_to_playctx(SCM ctx);
 extern SCM scm_from_playctx(playctx *ctx);
-
-extern SCM scm_errorstr(const char *str);
-extern SCM scm_errorstrf(const char *fmt, ...);
 #endif
