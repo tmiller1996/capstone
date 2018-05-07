@@ -75,11 +75,22 @@ SCM texture_from_surface(const char *__SCM_FUNCTION__, SDL_Renderer *renderer, S
 }
 
 #define __SCM_FUNCTION__ "load-texture"
-static SCM load_texture(SCM scm_ctx, SCM scm_path){
+static SCM load_texture(SCM scm_ctx, SCM scm_path, SCM scm_colorkey){
 	playctx *ctx = scm_to_playctx(scm_ctx);
 	if(ctx){
 		char *path = scm_to_locale_string(scm_path);
 		SDL_Surface *sfc = IMG_Load(path);
+		if(scm_colorkey != SCM_UNDEFINED){
+			SDL_Color colorkey;
+			if(scm_to_rgba(scm_colorkey, &colorkey)){
+				SDL_SetColorKey(sfc, SDL_TRUE, rgba_to_uint32(&colorkey));
+			}
+			else{
+				free(path);
+				SDL_FreeSurface(sfc);
+				return scm_errorstr("expected color");
+			}
+		}
 		if(sfc){
 			SDL_Texture *tex = SDL_CreateTextureFromSurface(ctx->renderer, sfc);
 			if(tex){
@@ -214,7 +225,7 @@ void init_graphics(){
 	scm_c_define_gsubr("render-present", 1, 0, 0, render_present);
 	scm_c_export("render-present", NULL);
 
-	scm_c_define_gsubr("load-texture", 2, 0, 0, load_texture);
+	scm_c_define_gsubr("load-texture", 3, 0, 0, load_texture);
 	scm_c_export("load-texture", NULL);
 
 	scm_c_define_gsubr("texture-size", 1, 0, 0, texture_size);

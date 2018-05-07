@@ -1,6 +1,6 @@
 #include "rgba.h"
 
-SCM scm_from_rgba(SDL_Color *color){
+SCM scm_from_rgba(const SDL_Color *color){
 	return scm_list_4(
 		scm_from_uint8(color->r), scm_from_uint8(color->g),
 		scm_from_uint8(color->b), scm_from_uint8(color->a)
@@ -24,4 +24,13 @@ bool scm_to_rgba(SCM scm_rgba, SDL_Color *color){
 		}
 	}
 	return false;
+}
+
+uint32_t rgba_to_uint32(const SDL_Color *color){
+	uint32_t u;
+	u = color->r;
+	u = (u  << 8) + color->g;
+	u = (u  << 8) + color->b;
+	u = (u  << 8) + color->a;
+	return u;
 }

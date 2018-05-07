@@ -6,6 +6,7 @@
 #include <libguile.h>
 #include <SDL.h>
 
-SCM scm_from_rgba(SDL_Color *color);
-bool scm_to_rgba(SCM scm_rgba, SDL_Color *color);
+extern SCM scm_from_rgba(const SDL_Color *color);
+extern bool scm_to_rgba(SCM scm_rgba, SDL_Color *color);
+extern uint32_t rgba_to_uint32(const SDL_Color *color);
 #endif
