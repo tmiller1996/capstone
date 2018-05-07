@@ -15,8 +15,12 @@
 (define green '(0 255 0 255))
 (define blue '(0 0 255 255))
 (define black '(0 0 0 255))
+(define purple '(127 0 127 255))
+(define orange '(255 165 0 255))
 
 (define bg-color black)
+
+(define font (open-font "assets/font.ttf" 24))
 
 (define face-x 0)
 (define face-y 0)
@@ -25,18 +29,45 @@
 (define face-h (cdr (texture-size face)))
 
 (define running #t)
+(define splash #t)
 (define mouse (cons 0 0))
 
-(write "Press 1-4 to change bg color") (newline)
-(write "Press WASD to move face") (newline)
+(define render-splash (lambda ()
+    (render-clear ctx '(127 0 127 255))
+    (render-texture-xy ctx (font-render-text-solid ctx font "Press Enter to begin" orange) '(20 . 20))
+    (render-present ctx)))
+
+(define render-game (lambda ()
+    (write "render-game")
+    (newline)))
+
+(define render (lambda ()
+    (cond (splash (render-splash))
+          (else (render-game)))))
+
+(define input-splash (lambda ()
+    (when (key-down ctx KEY_RETURN)
+          (set! splash #f))))
+
+(define input-game (lambda ()
+    (write "input-game")
+    (newline)))
+
+(define input (lambda ()
+    (when (close-requested ctx)
+        (set! running #f))
+    (cond (splash (input-splash))
+          (else (input-game)))))
 
 (while running
     (poll-input ctx)
     (set! mouse (mouse-pos ctx))
-    (render-clear ctx bg-color)
-    (render-texture-xy ctx face `(,face-x . ,face-y))
-    (render-present ctx)
-    (when #f
+    ;;(render-clear ctx bg-color)
+    ;;(render-texture-xy ctx face `(,face-x . ,face-y))
+    ;;(render-present ctx)
+    (render)
+    (input)
+    #|(when #f
         (write (car mouse)) (write-char #\space) (write (cdr mouse)) (newline))
     (when (close-requested ctx)
         (set! running #f))
@@ -63,4 +94,6 @@
     (when (> (+ face-x face-w -1) width)
         (set! face-x (- width face-w -1)))
     (when (> (+ face-y face-h -1) height)
-        (set! face-y (- height face-h -1))))
+        (set! face-y (- height face-h -1)))|#)
+
+(destroy-context ctx)

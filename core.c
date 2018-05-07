@@ -22,7 +22,7 @@ SCM scm_from_playctx(playctx *ctx){
 	return scm_from_long((long) ctx);
 }
 
-static void playctx_finalizer(void *_ctx, void *unused){
+/*static void playctx_finalizer(void *_ctx, void *unused){
 	playctx *ctx = (playctx*) _ctx;
 	if(ctx){
 		if(ctx->keyboard.current){
@@ -38,7 +38,31 @@ static void playctx_finalizer(void *_ctx, void *unused){
 			SDL_DestroyWindow(ctx->window);
 		}
 	}
+}*/
+
+#define __SCM_FUNCTION__ "destroy-context"
+static SCM destroy_context(SCM scm_ctx){
+	playctx *ctx = scm_to_playctx(scm_ctx);
+	if(ctx){
+		if(ctx->keyboard.current){
+			free(ctx->keyboard.current);
+		}
+		if(ctx->keyboard.last){
+			free(ctx->keyboard.last);
+		}
+		if(ctx->renderer){
+			SDL_DestroyRenderer(ctx->renderer);
+		}
+		if(ctx->window){
+			SDL_DestroyWindow(ctx->window);
+		}
+		return SCM_BOOL_T;
+	}
+	else{
+		return scm_errorstr("Invalid context");
+	}
 }
+#undef __SCM_FUNCTION__
 
 #define __SCM_FUNCTION__ "create-play-context"
 static SCM create_context(SCM scm_title, SCM scm_width, SCM scm_height){
@@ -57,7 +81,7 @@ static SCM create_context(SCM scm_title, SCM scm_width, SCM scm_height){
 				ctx->mouse.last = ctx->mouse.current = 0;
 				ctx->window = window;
 				ctx->renderer = renderer;
-				GC_register_finalizer(ctx, playctx_finalizer, NULL, 0, 0);
+				// GC_register_finalizer(ctx, playctx_finalizer, NULL, 0, 0);
 				free(title);
 				return scm_from_playctx(ctx);
 			}
@@ -89,6 +113,9 @@ void init_play_core(void *unused){
 
 	scm_c_define_gsubr("create-play-context", 3, 0, 0, create_context);
 	scm_c_export("create-play-context", NULL);
+
+	scm_c_define_gsubr("destroy-context", 1, 0, 0, destroy_context);
+	scm_c_export("destroy-context", NULL);
 
 	init_keytable();
 	init_input();
