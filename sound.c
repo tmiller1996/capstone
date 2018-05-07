@@ -99,11 +99,17 @@ static SCM load_sound(SCM scm_path) {
 }
 #undef __SCM_FUNCTION__
 
-static SCM play_sound(SCM scm_chunk) {
-	scm_to_chunk(scm_chunk);
-	// TODO
-	return SCM_BOOL_F;
+#define __SCM_FUNCTION__ "play-sound"
+static SCM play_sound(SCM chunk) {
+	chunk_handle *handle = scm_to_chunk(chunk);
+	if(handle){
+		return scm_from_int(Mix_PlayChannel(-1, handle->chunk, 1));
+	}
+	else{
+		return scm_errorstr("invalid handle");
+	}
 }
+#undef __SCM_FUNCTION__
 
 #define __SCM_FUNCTION__ "play-music"
 static SCM play_music(SCM scm_music, SCM scm_loopn){
