@@ -52,7 +52,6 @@
 
 (define input-game (lambda ()
   (when (key-down ctx KEY_w)
-    ;(set! player-vy -4))
     (jump))
   (when (key-down ctx KEY_a)
     (set! player-x -4))
@@ -70,12 +69,12 @@
   (set! player-vy (+ player-vy 1))))
 
 (define jump (lambda ()
-  (write "jump") (newline)
+  ; (write "jump") (newline)
   (when (= player-vy 0)
     (set! player-vy -40))))
 
-(define player-update (lambda ()
-  ; (gravity)
+(define (player-update)
+  (gravity)
   (set! player-x (+ player-x player-vx))
   (set! player-y (+ player-y player-vy))
   (when (< player-x 0)
@@ -83,13 +82,14 @@
   (when (< player-y 0)
     (set! player-y 0))
   (when (> (+ player-x player-w -1) width)
-    (set! player-x (- width player-w -1)))
+    (set! player-x (- width player-w  1)))
   (when (> (+ player-y player-h -1) height)
-    (set! player-y (- height player-h -1)))))
+    (set! player-y (- height player-h 1))))
 
 (while running
-    (poll-input ctx)
-    (render)
-    (input))
+  ; (write player-x) (write ", ") (write player-y) (newline)
+  (poll-input ctx)
+  (render)
+  (input))
 
 (destroy-context ctx)
